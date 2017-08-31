@@ -16,18 +16,23 @@ import android.widget.ListView;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * Created by ice-t on 29.08.2017.
+ */
+
+//MainActivity with actual topics
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    //Topics, listview with topics
     private ArrayList<Article> articles = new ArrayList<>();
-    private ArticlesAdapter adapter;
-    private ListView listView;
+    private ListView articles_list;
+    private ArticlesAdapter articles_list_adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +41,26 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        listView = (ListView) findViewById(R.id.news_list);
-        new NewsTask().execute();
+        //Finding listview and fill with data from splashscreen (or reload)
+        articles_list = (ListView) findViewById(R.id.news_list);
+        Intent intent = getIntent();
+        if (intent.hasExtra("articles")) {
+            articles = (ArrayList<Article>) intent.getSerializableExtra("articles");
+            articles_list_adapter = new ArticlesAdapter(MainActivity.this, articles);
+            articles_list.setAdapter(articles_list_adapter);
+            articles_list.setOnItemClickListener(
+                    new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+                            intent.putExtra(getString(R.string.url_stringed), articles.get(i).getDetailsUrl());
+                            startActivity(intent);
+                        }
+                    }
+            );
+        } else {
+            new ArticleReloadTask().execute();
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
@@ -67,9 +90,11 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_list) {
-            // Handle the favorite action
         } else if (id == R.id.nav_favorite) {
-
+            //If in navigation drawer we choose favorite -> change this activity to favorite
+            Intent intent = new Intent(MainActivity.this, FavoritesActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -77,22 +102,30 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public class NewsTask extends AsyncTask<String, Void, String> {
+    //This task fills articles with info
+    public class ArticleReloadTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... strings) {
+            //Jsoup DOM class
             Document document;
-            try
-            {
-                document = Jsoup.connect("https://www.adme.ru/").get();
-                Elements images = document.select(".al-pic");
-                Elements titles = document.select(".al-title");
-                Elements descriptions = document.select(".al-descr");
-                for(int i = 0; i < titles.size(); i++)
-                {
-                    articles.add(new Article(images.get(i).absUrl("src"),
-                                             titles.get(i).text(),
-                                             descriptions.get(i).text(),
-                                             titles.get(i).select("a").first().absUrl("href")));
+            try {
+                //Getting some document
+                document = Jsoup.connect(getString(R.string.adme_website)).get();
+                //Taking all image elements with article class
+                Elements images = document.select(getString(R.string.pictures_class));
+                //Also we need to get titles
+                Elements titles = document.select(getString(R.string.titles_class));
+                //And descriptions
+                Elements descriptions = document.select(getString(R.string.descriptions_class));
+                //Going through collections and taking info to fill articles collection
+                articles.clear();
+                for (int i = 0; i < titles.size(); i++) {
+                    //Also it needs to get details Url to fill entity
+                    articles.add(new Article(images.get(i).absUrl(getString(R.string.source_attribute)),
+                            titles.get(i).text(),
+                            descriptions.get(i).text(),
+                            titles.get(i).select(getString(R.string.link_tag))
+                                    .first().absUrl(getString(R.string.link_attribute))));
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -100,17 +133,20 @@ public class MainActivity extends AppCompatActivity
             return null;
         }
 
+        //After task binding some adapter and setting clicker to check details of certain article
         @Override
         protected void onPostExecute(String s) {
-            adapter =  new ArticlesAdapter(MainActivity.this, articles);
-            listView.setAdapter(adapter);
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-                    intent.putExtra("Url", articles.get(i).getDetailsUrl());
-                    startActivity(intent);
-                }}
+            articles_list_adapter = new ArticlesAdapter(MainActivity.this, articles);
+            articles_list.setAdapter(articles_list_adapter);
+            articles_list.setOnItemClickListener(
+                    new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+                            intent.putExtra(getString(R.string.url_stringed), articles.get(i).getDetailsUrl());
+                            startActivity(intent);
+                        }
+                    }
             );
         }
     }

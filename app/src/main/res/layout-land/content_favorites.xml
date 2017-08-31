@@ -8,4 +8,10 @@
     tools:context="com.example.ice_t.admeclient.FavoritesActivity"
     tools:showIn="@layout/app_bar_favorites">
 
+    <ListView
+        android:id="@+id/news_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="7dp" />
 </android.support.constraint.ConstraintLayout>

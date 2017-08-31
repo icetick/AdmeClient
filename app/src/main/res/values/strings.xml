@@ -6,6 +6,16 @@
 
     <string name="action_settings">Settings</string>
     <string name="stub_string">lorem ipsum</string>
-    <string name="title_activity_details">DetailsActivity</string>
-    <string name="title_activity_favorites">FavoritesActivity</string>
+    <string name="title_activity_details">Details</string>
+    <string name="title_activity_favorites">Favorites</string>
+    <string name="pictures_class">.al-pic</string>
+    <string name="titles_class">.al-title</string>
+    <string name="descriptions_class">.al-descr</string>
+    <string name="adme_website">https://www.adme.ru/</string>
+    <string name="source_attribute">src</string>
+    <string name="link_tag">a</string>
+    <string name="link_attribute">href</string>
+    <string name="url_stringed">Url</string>
+    <string name="no_internet">You have no internet connetion</string>
+    <string name="title_activity_splash">SplashActivity</string>
 </resources>
